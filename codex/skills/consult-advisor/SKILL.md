@@ -1,24 +1,33 @@
 ---
 name: consult-advisor
-description: Consult GPT-6 Astra for consequential or ambiguous decisions, competing approaches, recurring failures, strategy changes, contradictory evidence, or substantial completion reviews. Use for "consult the advisor"; skip routine edits and factual lookups.
+description: Consult GPT-6 Astra when the user explicitly authorizes advisor use in a prompt, including "consult-advisor is authorized if useful". Within that scope, decide whether consultation is useful.
 ---
 
 # Consult the advisor
 
-This skill explicitly requests delegation to one independent advisor when its scope
-applies. The primary owns implementation and reconciliation. Consult selectively;
-do not make consultation mandatory for every task, completion, or tool call.
+Activate only when the user explicitly authorizes advisor use in a prompt. This
+includes a direct request such as "consult the advisor" and discretionary permission
+such as "the consult-advisor skill is authorized if useful" or "use $consult-advisor
+when helpful". Permission may be given in the initial prompt and remains available
+throughout that task unless the user narrows or revokes it.
+
+With discretionary permission, the primary decides whether and when consultation
+would help with consequential or ambiguous decisions, competing approaches, recurring
+failures, strategy changes, contradictory evidence, or substantial completion reviews.
+No additional user judgment or confirmation is needed for a consultation within the
+authorized scope. Keep routine edits and factual lookups in the primary agent.
+These situations do not authorize consultation on their own. A request to edit or
+discuss this skill is not authorization to consult.
+
+Within the authorized scope, this skill authorizes delegation to one independent
+advisor. The primary owns implementation and reconciliation.
 
 ## Check before delegating
 
-- Determine the active primary model AND reasoning level from available session
-  metadata, a host status view, or the latest turn context. Saved defaults and task
-  complexity do not establish the active settings. Use only narrowly scoped metadata;
-  do not search unrelated conversations.
-- If the primary is already `gpt-6-astra` at `high`, `xhigh`, `max`, or `ultra`, skip
-  delegation even on explicit invocation and handle the question directly. If either
-  setting cannot be determined, briefly state the limitation before consulting; do
-  not invent it. A known different model suffices to rule out the skip condition.
+- Confirm the user explicitly authorized advisor use and keep it within that scope.
+  If authorization is discretionary, consult only when it would materially help.
+  The primary's model and reasoning level do not affect activation; do not inspect
+  them or report missing primary-model metadata as part of this workflow.
 - Confirm the available delegation tool can select the exact model and effort. If
   Astra, high reasoning, or delegation is unavailable, report that clearly and continue
   the primary work; never silently substitute another model or build an API/MCP service.

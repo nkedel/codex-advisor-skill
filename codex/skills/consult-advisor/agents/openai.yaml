@@ -1,6 +1,6 @@
 interface:
   display_name: "Consult Advisor"
-  short_description: "Consult Astra on consequential decisions and reviews"
-  default_prompt: "Use $consult-advisor to assess the current decision with the relevant evidence."
+  short_description: "Consult Astra when authorized and useful"
+  default_prompt: "Use $consult-advisor if useful for this task; decide when consultation would help."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

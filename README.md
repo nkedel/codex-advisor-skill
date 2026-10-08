@@ -28,7 +28,7 @@ codex/
 defaults to a read-only sandbox with approvals disabled, and disables further
 delegation. `SKILL.md` defines when to consult, how to hand off context, how to
 reconcile advice, and how to adapt to the available delegation tool. `openai.yaml`
-provides display metadata and permits implicit skill selection.
+provides display metadata and disables implicit skill selection.
 
 This tree mirrors the personal installation under `~/.codex`. Current documentation
 uses `.agents/skills` for repository skill discovery; see the repository-scoped
@@ -58,7 +58,14 @@ CODEX_HOME may require the corresponding client-specific discovery check.
 
 ## Use
 
-Explicit requests include:
+Explicit authorization can leave the decision to the primary agent:
+
+```text
+Implement the change, and the consult-advisor skill is authorized if useful.
+Use $consult-advisor when helpful during this task.
+```
+
+Direct consultation requests also work:
 
 ```text
 Consult the advisor about these competing implementation approaches.
@@ -66,32 +73,33 @@ Use $consult-advisor to assess the recurring failure before changing strategy.
 Use $consult-advisor to review the completed work against the user decisions.
 ```
 
-The primary can also select the skill implicitly when its description applies.
-The skill explicitly requests delegation, so it supplies the delegation instruction
-required by current local Codex. Selection is discretionary; routine edits, factual
-lookups, and individual tool calls do not require consultation.
+The skill activates only when the user explicitly authorizes advisor use in a
+prompt. With discretionary permission, the primary decides whether and when
+consultation would help; the user does not need to judge each consultation or
+confirm it again. Permission from the initial prompt remains available throughout
+that task unless narrowed or revoked. Task complexity, recurring failures,
+conflicting evidence, and completion reviews alone do not authorize consultation.
+Discussing or editing the skill does not authorize a consultation.
 
-Before consulting, the primary checks active session metadata. It skips delegation
-when the primary is already `gpt-6-astra` at `high`, `xhigh`, `max`, or `ultra`, even
-on explicit skill invocation. If active settings cannot be determined, it states
-that limitation. If the exact advisor model, effort, or delegation mechanism is
-unavailable, it reports this and continues the primary work without substituting
-another model.
+Activation does not depend on the primary model or reasoning level and requires no
+primary-model metadata check. If the exact advisor model, effort, or delegation
+mechanism is unavailable, the primary reports this and continues its work without
+substituting another model.
 
-## Activate it for a project
+## Make it available for a project
 
 With the personal installation available, add this to the project's root
 `AGENTS.md`:
 
 ```markdown
-- Use the `consult-advisor` skill when its scope applies, and delegate a bounded
-  consultation as instructed by that skill. Keep routine work in the primary
-  agent and follow the skill's Astra/high skip rule.
+- Use the `consult-advisor` skill only when the user explicitly authorizes advisor
+  use in a prompt. Authorization such as "consult-advisor is authorized if useful"
+  lets the primary decide whether and when to consult within that task, without
+  further confirmation. Follow the skill's bounded consultation workflow.
 ```
 
-This is an ordinary instruction, not a special activation command. It requests
-selective consultation while leaving the skill in charge of the handoff and skip
-rule.
+This is an ordinary instruction, not a special activation command. It preserves
+explicit-only consultation while leaving the skill in charge of the handoff.
 
 For a self-contained project installation, copy the agent to
 `<project>/.codex/agents/advisor.toml` and the entire skill directory to
@@ -104,7 +112,7 @@ A `.codex/agents/advisor.toml` file defines an available role; its presence alon
 does not require the primary to consult it. `.codex/config.toml` can enable agents
 with `[agents] enabled = true` if they have been disabled, but this is already the
 documented default and does not itself define consultation triggers. Put the
-activation instruction in the root `AGENTS.md`, not an assumed auto-loaded
+invocation instruction in the root `AGENTS.md`, not an assumed auto-loaded
 `.codex/AGENTS.md`.
 
 ## Handoff and reconciliation
@@ -152,7 +160,8 @@ entire transcript.
 ## Validation
 
 The personal workflow was validated on 2026-09-30 with Codex CLI 0.159.2 and a local
-IDE session using synthetic, non-mutating exercises:
+IDE session using synthetic, non-mutating exercises. These results predate the
+change to explicit-only invocation and removal of the primary-model skip rule:
 
 | Check | Result |
 | --- | --- |
@@ -160,8 +169,8 @@ IDE session using synthetic, non-mutating exercises:
 | Fresh CLI skill discovery | `consult-advisor` appeared in the available skill catalog. |
 | Explicit consultation | Native `advisor` child metadata confirmed `gpt-6-astra/high`, read-only permissions, and approvals `never`. |
 | Evidence and returned guidance | The advisor read a retry-policy fixture, considered contrary evidence, and preserved every settled constraint. |
-| Implicit consultation | A substantial completion-review request naming neither advisor nor skill selected the skill and spawned the native advisor. |
-| Redundant escalation | An Astra/high primary verified active metadata and spawned no advisor. |
+| Implicit consultation (previous behavior) | A substantial completion-review request naming neither advisor nor skill selected the skill and spawned the native advisor; automatic selection is now disabled. |
+| Redundant escalation (previous behavior) | An Astra/high primary verified active metadata and spawned no advisor; this skip rule has been removed. |
 | IDE model-override adapter | Confirmed Astra/high and useful referenced guidance; permissions remained inherited workspace-write. |
 
 No material conflict needed a follow-up. Unavailable-model handling, deliberate
